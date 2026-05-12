@@ -9,38 +9,211 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedVehiculosRouteImport } from './routes/_authenticated/vehiculos'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedEvidenciasRouteImport } from './routes/_authenticated/evidencias'
+import { Route as AuthenticatedEntregasRouteImport } from './routes/_authenticated/entregas'
+import { Route as AuthenticatedEmpleadosRouteImport } from './routes/_authenticated/empleados'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
+import { Route as AuthenticatedAyuntamientosRouteImport } from './routes/_authenticated/ayuntamientos'
+import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
+import { Route as AuthenticatedAccesosRouteImport } from './routes/_authenticated/accesos'
+import { Route as AuthenticatedEntregasIdRouteImport } from './routes/_authenticated/entregas.$id'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedVehiculosRoute = AuthenticatedVehiculosRouteImport.update({
+  id: '/vehiculos',
+  path: '/vehiculos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEvidenciasRoute = AuthenticatedEvidenciasRouteImport.update({
+  id: '/evidencias',
+  path: '/evidencias',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEntregasRoute = AuthenticatedEntregasRouteImport.update({
+  id: '/entregas',
+  path: '/entregas',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEmpleadosRoute = AuthenticatedEmpleadosRouteImport.update({
+  id: '/empleados',
+  path: '/empleados',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedConfiguracionRoute =
+  AuthenticatedConfiguracionRouteImport.update({
+    id: '/configuracion',
+    path: '/configuracion',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAyuntamientosRoute =
+  AuthenticatedAyuntamientosRouteImport.update({
+    id: '/ayuntamientos',
+    path: '/ayuntamientos',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAccesosRoute = AuthenticatedAccesosRouteImport.update({
+  id: '/accesos',
+  path: '/accesos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEntregasIdRoute = AuthenticatedEntregasIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedEntregasRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/accesos': typeof AuthenticatedAccesosRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
+  '/ayuntamientos': typeof AuthenticatedAyuntamientosRoute
+  '/configuracion': typeof AuthenticatedConfiguracionRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/empleados': typeof AuthenticatedEmpleadosRoute
+  '/entregas': typeof AuthenticatedEntregasRouteWithChildren
+  '/evidencias': typeof AuthenticatedEvidenciasRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
+  '/vehiculos': typeof AuthenticatedVehiculosRoute
+  '/entregas/$id': typeof AuthenticatedEntregasIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/accesos': typeof AuthenticatedAccesosRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
+  '/ayuntamientos': typeof AuthenticatedAyuntamientosRoute
+  '/configuracion': typeof AuthenticatedConfiguracionRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/empleados': typeof AuthenticatedEmpleadosRoute
+  '/entregas': typeof AuthenticatedEntregasRouteWithChildren
+  '/evidencias': typeof AuthenticatedEvidenciasRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
+  '/vehiculos': typeof AuthenticatedVehiculosRoute
+  '/entregas/$id': typeof AuthenticatedEntregasIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_authenticated/accesos': typeof AuthenticatedAccesosRoute
+  '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
+  '/_authenticated/ayuntamientos': typeof AuthenticatedAyuntamientosRoute
+  '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/empleados': typeof AuthenticatedEmpleadosRoute
+  '/_authenticated/entregas': typeof AuthenticatedEntregasRouteWithChildren
+  '/_authenticated/evidencias': typeof AuthenticatedEvidenciasRoute
+  '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/_authenticated/vehiculos': typeof AuthenticatedVehiculosRoute
+  '/_authenticated/entregas/$id': typeof AuthenticatedEntregasIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/accesos'
+    | '/auditoria'
+    | '/ayuntamientos'
+    | '/configuracion'
+    | '/dashboard'
+    | '/empleados'
+    | '/entregas'
+    | '/evidencias'
+    | '/perfil'
+    | '/vehiculos'
+    | '/entregas/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/accesos'
+    | '/auditoria'
+    | '/ayuntamientos'
+    | '/configuracion'
+    | '/dashboard'
+    | '/empleados'
+    | '/entregas'
+    | '/evidencias'
+    | '/perfil'
+    | '/vehiculos'
+    | '/entregas/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/login'
+    | '/_authenticated/accesos'
+    | '/_authenticated/auditoria'
+    | '/_authenticated/ayuntamientos'
+    | '/_authenticated/configuracion'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/empleados'
+    | '/_authenticated/entregas'
+    | '/_authenticated/evidencias'
+    | '/_authenticated/perfil'
+    | '/_authenticated/vehiculos'
+    | '/_authenticated/entregas/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +221,133 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/vehiculos': {
+      id: '/_authenticated/vehiculos'
+      path: '/vehiculos'
+      fullPath: '/vehiculos'
+      preLoaderRoute: typeof AuthenticatedVehiculosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/evidencias': {
+      id: '/_authenticated/evidencias'
+      path: '/evidencias'
+      fullPath: '/evidencias'
+      preLoaderRoute: typeof AuthenticatedEvidenciasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/entregas': {
+      id: '/_authenticated/entregas'
+      path: '/entregas'
+      fullPath: '/entregas'
+      preLoaderRoute: typeof AuthenticatedEntregasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/empleados': {
+      id: '/_authenticated/empleados'
+      path: '/empleados'
+      fullPath: '/empleados'
+      preLoaderRoute: typeof AuthenticatedEmpleadosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/configuracion': {
+      id: '/_authenticated/configuracion'
+      path: '/configuracion'
+      fullPath: '/configuracion'
+      preLoaderRoute: typeof AuthenticatedConfiguracionRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ayuntamientos': {
+      id: '/_authenticated/ayuntamientos'
+      path: '/ayuntamientos'
+      fullPath: '/ayuntamientos'
+      preLoaderRoute: typeof AuthenticatedAyuntamientosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/auditoria': {
+      id: '/_authenticated/auditoria'
+      path: '/auditoria'
+      fullPath: '/auditoria'
+      preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/accesos': {
+      id: '/_authenticated/accesos'
+      path: '/accesos'
+      fullPath: '/accesos'
+      preLoaderRoute: typeof AuthenticatedAccesosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/entregas/$id': {
+      id: '/_authenticated/entregas/$id'
+      path: '/$id'
+      fullPath: '/entregas/$id'
+      preLoaderRoute: typeof AuthenticatedEntregasIdRouteImport
+      parentRoute: typeof AuthenticatedEntregasRoute
+    }
   }
 }
 
+interface AuthenticatedEntregasRouteChildren {
+  AuthenticatedEntregasIdRoute: typeof AuthenticatedEntregasIdRoute
+}
+
+const AuthenticatedEntregasRouteChildren: AuthenticatedEntregasRouteChildren = {
+  AuthenticatedEntregasIdRoute: AuthenticatedEntregasIdRoute,
+}
+
+const AuthenticatedEntregasRouteWithChildren =
+  AuthenticatedEntregasRoute._addFileChildren(
+    AuthenticatedEntregasRouteChildren,
+  )
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedAccesosRoute: typeof AuthenticatedAccesosRoute
+  AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
+  AuthenticatedAyuntamientosRoute: typeof AuthenticatedAyuntamientosRoute
+  AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEmpleadosRoute: typeof AuthenticatedEmpleadosRoute
+  AuthenticatedEntregasRoute: typeof AuthenticatedEntregasRouteWithChildren
+  AuthenticatedEvidenciasRoute: typeof AuthenticatedEvidenciasRoute
+  AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedVehiculosRoute: typeof AuthenticatedVehiculosRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAccesosRoute: AuthenticatedAccesosRoute,
+  AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
+  AuthenticatedAyuntamientosRoute: AuthenticatedAyuntamientosRoute,
+  AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEmpleadosRoute: AuthenticatedEmpleadosRoute,
+  AuthenticatedEntregasRoute: AuthenticatedEntregasRouteWithChildren,
+  AuthenticatedEvidenciasRoute: AuthenticatedEvidenciasRoute,
+  AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedVehiculosRoute: AuthenticatedVehiculosRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
