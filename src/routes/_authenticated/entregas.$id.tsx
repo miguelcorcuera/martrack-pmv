@@ -110,7 +110,7 @@ function DeliveryDetailPage() {
   return (
     <>
       <PageHeader
-        title={`Entrega · ${delivery.vehicles?.plate}`}
+        title={`Entrega · ${delivery.vehicles?.license_plate}`}
         description={`${delivery.vehicles?.brand} ${delivery.vehicles?.model} · ${delivery.municipalities?.name ?? "—"}`}
         actions={
           <div className="flex items-center gap-2">
