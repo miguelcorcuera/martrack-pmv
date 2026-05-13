@@ -87,10 +87,10 @@ function DashboardPage() {
               {(data?.lastDeliveries ?? []).map((d: any) => (
                 <Link key={d.id} to="/entregas/$id" params={{ id: d.id }} className="flex items-center justify-between px-5 py-3 text-sm hover:bg-accent/40">
                   <div>
-                    <div className="font-medium">{d.vehicles?.plate ?? "—"} · {d.vehicles?.brand} {d.vehicles?.model}</div>
+                    <div className="font-medium">{d.license_plate ?? "—"} · {d.brand} {d.model}</div>
                     <div className="text-xs text-muted-foreground">{format(new Date(d.delivery_date), "yyyy-MM-dd")}</div>
                   </div>
-                  <StatusBadge value={d.status} tone={statusTone(d.status)} />
+                  <StatusBadge value={d.delivery_status} tone={statusTone(d.delivery_status)} />
                 </Link>
               ))}
               {!isLoading && data?.lastDeliveries.length === 0 && (
