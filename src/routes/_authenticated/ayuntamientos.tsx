@@ -47,7 +47,7 @@ function MunicipalitiesPage() {
       const { error } = await supabase.from("municipalities").update({
         name: form.name, zone: form.zone ?? null,
         internal_responsible: form.internal_responsible ?? null,
-        status: form.status ?? "activo",
+        status: form.status ?? "active",
         observations: form.observations ?? null,
       }).eq("id", editing.id);
       if (error) return toast.error(error.message);
@@ -57,7 +57,7 @@ function MunicipalitiesPage() {
       const { data, error } = await supabase.from("municipalities").insert({
         name: form.name, zone: form.zone ?? null,
         internal_responsible: form.internal_responsible ?? null,
-        status: form.status ?? "activo",
+        status: form.status ?? "active",
         observations: form.observations ?? null,
       }).select().single();
       if (error) return toast.error(error.message);
@@ -69,7 +69,7 @@ function MunicipalitiesPage() {
   };
 
   const toggleActive = async (m: Municipality) => {
-    const newStatus = m.status === "activo" ? "inactivo" : "activo";
+    const newStatus = m.status === "active" ? "inactive" : "active";
     const { error } = await supabase.from("municipalities").update({ status: newStatus }).eq("id", m.id);
     if (error) return toast.error(error.message);
     await logAudit({ entity_type: "municipality", entity_id: m.id, action: "ayuntamiento_actualizado", actor_role: role, new_value: { status: newStatus } });
@@ -122,7 +122,7 @@ function MunicipalitiesPage() {
                       <>
                         <Button variant="ghost" size="sm" onClick={() => { setEditing(m); setOpen(true); }}>Editar</Button>
                         <Button variant="ghost" size="sm" onClick={() => toggleActive(m)}>
-                          {m.status === "activo" ? "Desactivar" : "Activar"}
+                          {m.status === "active" ? "Desactivar" : "Activar"}
                         </Button>
                       </>
                     )}
@@ -144,7 +144,7 @@ function MuniDialog({ editing, onSubmit }: {
   const [name, setName] = useState(editing?.name ?? "");
   const [zone, setZone] = useState(editing?.zone ?? "");
   const [resp, setResp] = useState(editing?.internal_responsible ?? "");
-  const [status, setStatus] = useState(editing?.status ?? "activo");
+  const [status, setStatus] = useState(editing?.status ?? "active");
   const [obs, setObs] = useState(editing?.observations ?? "");
 
   return (
@@ -163,8 +163,8 @@ function MuniDialog({ editing, onSubmit }: {
           <Select value={status} onValueChange={(v) => setStatus(v as any)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="activo">activo</SelectItem>
-              <SelectItem value="inactivo">inactivo</SelectItem>
+              <SelectItem value="active">activo</SelectItem>
+              <SelectItem value="inactive">inactivo</SelectItem>
             </SelectContent>
           </Select>
         </div>
