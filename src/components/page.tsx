@@ -36,10 +36,11 @@ export function StatusBadge({ value, tone = "neutral" }: {
   );
 }
 
-export function statusTone(s: string): "neutral" | "success" | "warning" | "danger" | "info" {
-  if (["activo","disponible","firmado","cerrado"].includes(s)) return "success";
-  if (["pendiente","pendiente_firma","pendiente_supervisor","evidencias_pendientes","revision","mantenimiento","borrador"].includes(s)) return "warning";
-  if (["inactivo","bloqueado","baja","cancelado"].includes(s)) return "danger";
-  if (["asignado"].includes(s)) return "info";
+export function statusTone(s: string | null | undefined): "neutral" | "success" | "warning" | "danger" | "info" {
+  if (!s) return "neutral";
+  if (["active","activo","available","disponible","signed","firmado","closed","cerrado"].includes(s)) return "success";
+  if (["pending","pendiente","pending_signature","pending_review","pending_supervisor","evidencias_pendientes","review","revision","maintenance","mantenimiento","draft","borrador"].includes(s)) return "warning";
+  if (["inactive","inactivo","blocked","bloqueado","retired","baja","out_of_service","cancelled","cancelado"].includes(s)) return "danger";
+  if (["assigned","asignado"].includes(s)) return "info";
   return "neutral";
 }
