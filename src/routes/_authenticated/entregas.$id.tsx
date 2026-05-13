@@ -31,7 +31,7 @@ function DeliveryDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vehicle_deliveries")
-        .select("*, vehicles(plate,brand,model), municipalities(name), supervisor:supervisor_employee_id(id,full_name,auth_user_id), receiver:receiver_employee_id(id,full_name)")
+        .select("*, vehicles(license_plate,brand,model), municipalities(name), supervisor:supervisor_employee_id(id,full_name,auth_user_id), receiver:receiver_employee_id(id,full_name)")
         .eq("id", id).single();
       if (error) throw error;
       return data as any;
