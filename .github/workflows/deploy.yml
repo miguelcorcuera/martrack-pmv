@@ -1,0 +1,46 @@
+name: MarTrack PMV - Deploy
+
+on:
+  push:
+    branches:
+      - dev
+      - staging
+      - main
+  pull_request:
+    branches:
+      - staging
+      - main
+
+jobs:
+  deploy-development:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Simulate development deploy
+        run: echo "Deploying DEV environment"
+
+  deploy-staging:
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Simulate staging deploy
+        run: echo "Deploying STAGING environment"
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Simulate production deploy
+        run: echo "Deploying PRODUCTION environment"
