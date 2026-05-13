@@ -13,7 +13,7 @@ export type DeliveryStatus =
 export interface Municipality {
   id: string; name: string; zone: string | null;
   internal_responsible: string | null;
-  status: "activo" | "inactivo";
+  status: "active" | "inactive";
   observations: string | null;
   created_at: string; updated_at: string;
 }

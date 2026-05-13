@@ -40,26 +40,25 @@ function DashboardPage() {
         evidence, municipalities, employeesActive,
       ] = await Promise.all([
         counts("vehicles"),
-        counts("vehicles", (q) => q.eq("status","disponible")),
-        counts("vehicles", (q) => q.eq("status","asignado")),
-        counts("vehicles", (q) => q.eq("status","revision")),
-        counts("vehicle_deliveries", (q) => q.eq("status","pendiente_firma")),
-        counts("vehicle_deliveries", (q) => q.in("status",["firmado","cerrado"])),
-        counts("vehicle_evidence", (q) => q.eq("is_deleted", false)),
-        counts("municipalities", (q) => q.eq("status","activo")),
-        counts("employees", (q) => q.eq("status","activo")),
+        counts("vehicles", (q) => q.eq("status","available")),
+        counts("vehicles", (q) => q.eq("status","assigned")),
+        counts("vehicles", (q) => q.eq("status","pending_review")),
+        counts("vehicle_deliveries", (q) => q.eq("delivery_status","pending_signature")),
+        counts("vehicle_deliveries", (q) => q.in("delivery_status",["signed","closed"])),
+        counts("v_active_vehicle_evidence"),
+        counts("municipalities", (q) => q.eq("status","active")),
+        counts("employees", (q) => q.eq("status","active")),
       ]);
 
-      const [{ data: lastDeliveries }, { data: lastEvidence }, { data: lastAudit }] = await Promise.all([
-        supabase.from("vehicle_deliveries").select("id, delivery_date, status, vehicle_id, vehicles(plate, brand, model)").order("created_at",{ascending:false}).limit(5),
-        supabase.from("vehicle_evidence").select("id, file_name, created_at").eq("is_deleted",false).order("created_at",{ascending:false}).limit(5),
+      const [{ data: lastDeliveries }, { data: lastAudit }] = await Promise.all([
+        supabase.from("v_delivery_overview").select("id, delivery_date, delivery_status, license_plate, brand, model").order("created_at",{ascending:false}).limit(5),
         supabase.from("audit_log").select("id, action, description, created_at").order("created_at",{ascending:false}).limit(8),
       ]);
 
       return {
         vehicles, vehiclesAvail, vehiclesAssigned, vehiclesRevision,
         deliveriesPending, deliveriesDone, evidence, municipalities, employeesActive,
-        lastDeliveries: lastDeliveries ?? [], lastEvidence: lastEvidence ?? [],
+        lastDeliveries: lastDeliveries ?? [],
         lastAudit: lastAudit ?? [],
       };
     },
@@ -88,10 +87,10 @@ function DashboardPage() {
               {(data?.lastDeliveries ?? []).map((d: any) => (
                 <Link key={d.id} to="/entregas/$id" params={{ id: d.id }} className="flex items-center justify-between px-5 py-3 text-sm hover:bg-accent/40">
                   <div>
-                    <div className="font-medium">{d.vehicles?.plate ?? "—"} · {d.vehicles?.brand} {d.vehicles?.model}</div>
+                    <div className="font-medium">{d.license_plate ?? "—"} · {d.brand} {d.model}</div>
                     <div className="text-xs text-muted-foreground">{format(new Date(d.delivery_date), "yyyy-MM-dd")}</div>
                   </div>
-                  <StatusBadge value={d.status} tone={statusTone(d.status)} />
+                  <StatusBadge value={d.delivery_status} tone={statusTone(d.delivery_status)} />
                 </Link>
               ))}
               {!isLoading && data?.lastDeliveries.length === 0 && (

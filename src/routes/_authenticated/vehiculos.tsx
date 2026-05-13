@@ -13,12 +13,29 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { supabase } from "@/lib/supabase";
 import { logAudit } from "@/lib/audit";
 import { useAuth } from "@/hooks/use-auth";
-import type { Vehicle, Municipality, Employee } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/vehiculos")({ component: VehiclesPage });
 
-const STATUSES = ["disponible","asignado","mantenimiento","baja","revision"] as const;
-const FUELS = ["gasolina","diesel","hibrido","electrico","glp"] as const;
+const STATUSES = ["available", "assigned", "pending_review", "maintenance", "out_of_service"] as const;
+const FUELS = ["Gasoline", "Diesel", "Hybrid", "Electric", "LPG"] as const;
+
+interface VehicleForm {
+  id?: string;
+  license_plate?: string;
+  brand?: string;
+  model?: string;
+  vehicle_year?: number | null;
+  registration_date?: string | null;
+  color?: string | null;
+  engine_type?: string | null;
+  fuel_type?: string | null;
+  mileage?: number;
+  status?: string;
+  municipality_id?: string | null;
+  current_responsible_employee_id?: string | null;
+  observations?: string | null;
+  is_active?: boolean;
+}
 
 function VehiclesPage() {
   const qc = useQueryClient();
@@ -27,21 +44,21 @@ function VehiclesPage() {
   const [search, setSearch] = useState("");
   const [muniFilter, setMuniFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [editing, setEditing] = useState<Vehicle | null>(null);
+  const [editing, setEditing] = useState<VehicleForm | null>(null);
   const [open, setOpen] = useState(false);
 
   const { data: munis } = useQuery({
     queryKey: ["munis-lite"],
-    queryFn: async () => (await supabase.from("municipalities").select("id,name").order("name")).data as Pick<Municipality,"id"|"name">[],
+    queryFn: async () => (await supabase.from("municipalities").select("id,name,status").order("name")).data ?? [],
   });
   const { data: emps } = useQuery({
-    queryKey: ["emps-lite"],
-    queryFn: async () => (await supabase.from("employees").select("id,full_name,role_operational,status").eq("status","activo").order("full_name")).data as Pick<Employee,"id"|"full_name"|"role_operational"|"status">[],
+    queryKey: ["emps-active-lite"],
+    queryFn: async () => (await supabase.from("v_active_employees").select("id,full_name,role_operational,municipality_name").order("full_name")).data ?? [],
   });
   const { data, isLoading } = useQuery({
-    queryKey: ["vehicles", muniFilter, statusFilter],
+    queryKey: ["vehicles-overview", muniFilter, statusFilter],
     queryFn: async () => {
-      let q = supabase.from("vehicles").select("*, municipalities(name), employees:current_responsible_employee_id(full_name)").order("plate");
+      let q = supabase.from("v_vehicle_overview").select("*").order("license_plate");
       if (muniFilter !== "all") q = q.eq("municipality_id", muniFilter);
       if (statusFilter !== "all") q = q.eq("status", statusFilter);
       const { data, error } = await q;
@@ -51,24 +68,30 @@ function VehiclesPage() {
   });
 
   const filtered = (data ?? []).filter((v) =>
-    [v.plate, v.brand, v.model].join(" ").toLowerCase().includes(search.toLowerCase())
+    [v.license_plate, v.brand, v.model].join(" ").toLowerCase().includes(search.toLowerCase())
   );
 
-  const onSubmit = async (form: Partial<Vehicle>) => {
-    if (!form.plate?.trim() || !form.brand?.trim() || !form.model?.trim()) {
+  const onSubmit = async (form: VehicleForm) => {
+    if (!form.license_plate?.trim() || !form.brand?.trim() || !form.model?.trim()) {
       toast.error("Matrícula, marca y modelo son obligatorios"); return;
     }
-    const payload = {
-      plate: form.plate.trim(), brand: form.brand, model: form.model,
-      year: form.year ?? null, registration_date: form.registration_date ?? null,
-      color: form.color ?? null, engine: form.engine ?? null,
-      fuel: form.fuel ?? "diesel", mileage: form.mileage ?? 0,
-      municipality_id: form.municipality_id ?? null,
-      status: form.status ?? "disponible",
-      current_responsible_employee_id: form.current_responsible_employee_id ?? null,
+    const payload: Record<string, unknown> = {
+      license_plate: form.license_plate.trim(),
+      brand: form.brand,
+      model: form.model,
+      vehicle_year: form.vehicle_year ?? null,
+      registration_date: form.registration_date || null,
+      color: form.color ?? null,
+      engine_type: form.engine_type ?? null,
+      fuel_type: form.fuel_type ?? null,
+      mileage: form.mileage ?? 0,
+      municipality_id: form.municipality_id || null,
+      status: form.status ?? "available",
+      current_responsible_employee_id: form.current_responsible_employee_id || null,
       observations: form.observations ?? null,
+      is_active: form.is_active ?? true,
     };
-    if (editing) {
+    if (editing?.id) {
       const { error } = await supabase.from("vehicles").update(payload).eq("id", editing.id);
       if (error) return toast.error(error.message);
       await logAudit({ entity_type: "vehicle", entity_id: editing.id, action: "vehiculo_actualizado", actor_role: role, new_value: payload });
@@ -80,7 +103,14 @@ function VehiclesPage() {
       toast.success("Vehículo creado");
     }
     setEditing(null); setOpen(false);
-    qc.invalidateQueries({ queryKey: ["vehicles"] });
+    qc.invalidateQueries({ queryKey: ["vehicles-overview"] });
+  };
+
+  const openEdit = async (row: any) => {
+    const { data, error } = await supabase.from("vehicles").select("*").eq("id", row.id).single();
+    if (error) return toast.error(error.message);
+    setEditing(data as VehicleForm);
+    setOpen(true);
   };
 
   return (
@@ -91,7 +121,7 @@ function VehiclesPage() {
         actions={canEdit && (
           <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
             <DialogTrigger asChild>
-              <Button onClick={() => setEditing(null)}><Plus className="mr-1 h-4 w-4" />Nuevo</Button>
+              <Button onClick={() => setEditing(null)}><Plus className="mr-1 h-4 w-4" />Nuevo vehículo</Button>
             </DialogTrigger>
             <VehicleDialog editing={editing} munis={munis ?? []} emps={emps ?? []} onSubmit={onSubmit} />
           </Dialog>
@@ -104,11 +134,11 @@ function VehiclesPage() {
             <SelectTrigger className="w-48"><SelectValue placeholder="Ayuntamiento" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los ayuntamientos</SelectItem>
-              {(munis ?? []).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+              {(munis ?? []).map((m: any) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-44"><SelectValue placeholder="Estado" /></SelectTrigger>
+            <SelectTrigger className="w-48"><SelectValue placeholder="Estado" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los estados</SelectItem>
               {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -123,29 +153,27 @@ function VehiclesPage() {
                 <th className="px-4 py-3">Matrícula</th>
                 <th className="px-4 py-3">Marca / Modelo</th>
                 <th className="px-4 py-3">Año</th>
-                <th className="px-4 py-3">Combustible</th>
-                <th className="px-4 py-3">Km</th>
                 <th className="px-4 py-3">Ayuntamiento</th>
                 <th className="px-4 py-3">Responsable</th>
                 <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3">Km</th>
                 <th className="px-4 py-3 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {isLoading && <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Cargando…</td></tr>}
-              {!isLoading && filtered.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Sin resultados.</td></tr>}
-              {filtered.map((v) => (
+              {isLoading && <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Cargando…</td></tr>}
+              {!isLoading && filtered.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Sin resultados.</td></tr>}
+              {filtered.map((v: any) => (
                 <tr key={v.id} className="hover:bg-accent/30">
-                  <td className="px-4 py-3 font-mono font-medium">{v.plate}</td>
+                  <td className="px-4 py-3 font-mono font-medium">{v.license_plate}</td>
                   <td className="px-4 py-3">{v.brand} {v.model}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{v.year ?? "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{v.fuel}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{v.mileage?.toLocaleString() ?? 0}</td>
-                  <td className="px-4 py-3">{v.municipalities?.name ?? "—"}</td>
-                  <td className="px-4 py-3">{v.employees?.full_name ?? "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{v.vehicle_year ?? "—"}</td>
+                  <td className="px-4 py-3">{v.municipality_name ?? "—"}</td>
+                  <td className="px-4 py-3">{v.current_responsible_name ?? "—"}</td>
                   <td className="px-4 py-3"><StatusBadge value={v.status} tone={statusTone(v.status)} /></td>
+                  <td className="px-4 py-3 text-muted-foreground">{(v.mileage ?? 0).toLocaleString()}</td>
                   <td className="px-4 py-3 text-right">
-                    {canEdit && <Button variant="ghost" size="sm" onClick={() => { setEditing(v); setOpen(true); }}>Editar</Button>}
+                    {canEdit && <Button variant="ghost" size="sm" onClick={() => openEdit(v)}>Editar</Button>}
                   </td>
                 </tr>
               ))}
@@ -158,55 +186,57 @@ function VehiclesPage() {
 }
 
 function VehicleDialog({ editing, munis, emps, onSubmit }: {
-  editing: Vehicle | null;
-  munis: Pick<Municipality,"id"|"name">[];
-  emps: Pick<Employee,"id"|"full_name"|"role_operational"|"status">[];
-  onSubmit: (f: Partial<Vehicle>) => void;
+  editing: VehicleForm | null;
+  munis: any[];
+  emps: any[];
+  onSubmit: (f: VehicleForm) => void;
 }) {
-  const [f, setF] = useState<Partial<Vehicle>>(editing ?? { fuel: "diesel", status: "disponible", mileage: 0 });
-  const set = (k: keyof Vehicle, v: any) => setF((p) => ({ ...p, [k]: v }));
+  const [f, setF] = useState<VehicleForm>(editing ?? { fuel_type: "Diesel", status: "available", mileage: 0, is_active: true });
+  const set = <K extends keyof VehicleForm>(k: K, v: VehicleForm[K]) => setF((p) => ({ ...p, [k]: v }));
+
   return (
     <DialogContent className="max-w-2xl">
-      <DialogHeader><DialogTitle>{editing ? "Editar vehículo" : "Nuevo vehículo"}</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{editing?.id ? "Editar vehículo" : "Nuevo vehículo"}</DialogTitle></DialogHeader>
       <div className="grid grid-cols-2 gap-3">
-        <div><Label>Matrícula *</Label><Input value={f.plate ?? ""} onChange={(e) => set("plate", e.target.value)} /></div>
-        <div><Label>Año</Label><Input type="number" value={f.year ?? ""} onChange={(e) => set("year", Number(e.target.value) || null)} /></div>
+        <div><Label>Matrícula *</Label><Input value={f.license_plate ?? ""} onChange={(e) => set("license_plate", e.target.value)} /></div>
+        <div><Label>Año</Label><Input type="number" value={f.vehicle_year ?? ""} onChange={(e) => set("vehicle_year", Number(e.target.value) || null)} /></div>
         <div><Label>Marca *</Label><Input value={f.brand ?? ""} onChange={(e) => set("brand", e.target.value)} /></div>
         <div><Label>Modelo *</Label><Input value={f.model ?? ""} onChange={(e) => set("model", e.target.value)} /></div>
         <div><Label>Color</Label><Input value={f.color ?? ""} onChange={(e) => set("color", e.target.value)} /></div>
-        <div><Label>Motor</Label><Input value={f.engine ?? ""} onChange={(e) => set("engine", e.target.value)} /></div>
+        <div><Label>Motor</Label><Input value={f.engine_type ?? ""} onChange={(e) => set("engine_type", e.target.value)} /></div>
         <div>
           <Label>Combustible</Label>
-          <Select value={f.fuel ?? "diesel"} onValueChange={(v) => set("fuel", v)}>
+          <Select value={f.fuel_type ?? "Diesel"} onValueChange={(v) => set("fuel_type", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{FUELS.map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div><Label>Kilometraje</Label><Input type="number" value={f.mileage ?? 0} onChange={(e) => set("mileage", Number(e.target.value))} /></div>
-        <div>
-          <Label>Ayuntamiento</Label>
-          <Select value={f.municipality_id ?? ""} onValueChange={(v) => set("municipality_id", v)}>
-            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-            <SelectContent>{munis.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
+        <div><Label>Fecha matriculación</Label><Input type="date" value={f.registration_date ?? ""} onChange={(e) => set("registration_date", e.target.value)} /></div>
         <div>
           <Label>Estado</Label>
-          <Select value={f.status ?? "disponible"} onValueChange={(v) => set("status", v)}>
+          <Select value={f.status ?? "available"} onValueChange={(v) => set("status", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div className="col-span-2">
+        <div>
+          <Label>Ayuntamiento</Label>
+          <Select value={f.municipality_id ?? ""} onValueChange={(v) => set("municipality_id", v)}>
+            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+            <SelectContent>{munis.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div>
           <Label>Responsable actual</Label>
           <Select value={f.current_responsible_employee_id ?? ""} onValueChange={(v) => set("current_responsible_employee_id", v || null)}>
             <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-            <SelectContent>{emps.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name} · {e.role_operational}</SelectItem>)}</SelectContent>
+            <SelectContent>{emps.map((e: any) => <SelectItem key={e.id} value={e.id}>{e.full_name} · {e.role_operational ?? "—"}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="col-span-2"><Label>Observaciones</Label><Textarea rows={3} value={f.observations ?? ""} onChange={(e) => set("observations", e.target.value)} /></div>
       </div>
-      <DialogFooter><Button onClick={() => onSubmit(f)}>{editing ? "Guardar cambios" : "Crear"}</Button></DialogFooter>
+      <DialogFooter><Button onClick={() => onSubmit(f)}>{editing?.id ? "Guardar cambios" : "Crear"}</Button></DialogFooter>
     </DialogContent>
   );
 }
